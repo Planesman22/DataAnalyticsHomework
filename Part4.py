@@ -5,7 +5,7 @@ import os
 from keras.models import Sequential
 from keras.layers import LSTM, Dense
 
-WindowSize = 1
+WindowSize = 3
 
 numpy.random.seed(0)
 
