@@ -5,6 +5,8 @@ import os
 from keras.models import Sequential
 from keras.layers import LSTM, Dense
 
+WindowSize = 1
+
 numpy.random.seed(0)
 
 os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
@@ -25,26 +27,23 @@ Data = Data/Scale
 TrainData = Data[:int(len(Data)*0.67)]
 TestData = Data[int(len(Data)*0.67):]
 
-# Hoodini Magic
-TrainX = TrainData[:-1]
-TrainY = TrainData[1:]
+def getSequence(Data, WindowSize):
+    X, Y = [], []
+    for i in range(len(Data) - WindowSize):
+        X.append(Data[i:(i + WindowSize)])
+        Y.append(Data[i + WindowSize])
+    return numpy.array(X).reshape(-1, WindowSize), numpy.array(Y).reshape(-1, 1)
 
-TestX = TestData[:-1]
-TestY = TestData[1:]
-
-# Re-Shaping, almost did a def for this but i just wanted to be fast
-TrainX = numpy.vstack((TrainX, numpy.arange(1, TrainX.size+1)))
-TestX = numpy.vstack((TestX, numpy.arange(1, TestX.size+1)))
+TrainX, TrainY = getSequence(TrainData, WindowSize)
+TestX, TestY = getSequence(TestData, WindowSize)
 
 
-TrainX = numpy.transpose(TrainX)
-TestX = numpy.transpose(TestX)
+TrainX = numpy.reshape(TrainX, (TrainX.shape[0], WindowSize, TrainX.shape[1]))
+TestX = numpy.reshape(TestX, (TestX.shape[0], WindowSize, TestX.shape[1]))
 
-TrainX = numpy.reshape(TrainX, (TrainX.shape[0], 1, TrainX.shape[1]))
-TestX = numpy.reshape(TestX, (TestX.shape[0], 1, TestX.shape[1]))
 
 SeqModel = Sequential([
-    LSTM(4, input_shape=(1, 2), activation='sigmoid'),
+    LSTM(4, input_shape=(WindowSize, 1), activation='sigmoid'),
     Dense(1)
 ])
 
